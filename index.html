@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pencarian Kampung & Sekolah Dampingan 2026</title>
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --card: #ffffff;
+    --ink: #1f2320;
+    --muted: #6b6f6b;
+    --accent: #2f6b45;
+    --accent-soft: #e7f0ea;
+    --border: #e3e1da;
+    --khk-color: #7a4f2b;
+    --sekolah-color: #2b5f7a;
+    --sekolah-soft: #e3edf0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 20px 14px 60px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 {
+    font-size: 1.35rem;
+    margin: 4px 0 2px;
+    font-weight: 700;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin-bottom: 18px;
+  }
+  .search-box {
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 13px 40px 13px 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    font-size: 1rem;
+    background: var(--card);
+    color: var(--ink);
+  }
+  .search-box input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: none;
+    padding: 4px;
+  }
+  .hint {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin: 0 0 14px 2px;
+  }
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .filter-chip {
+    padding: 6px 13px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .filter-chip.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .count-row {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 4px 2px 10px;
+  }
+  .list {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .list-row {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .list-row:last-child { border-bottom: none; }
+  .row-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .row-name {
+    font-weight: 700;
+    font-size: 0.98rem;
+    color: var(--ink);
+  }
+  .type-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .type-tag.kampung { background: var(--accent-soft); color: var(--accent); }
+  .type-tag.sekolah { background: var(--sekolah-soft); color: var(--sekolah-color); }
+  .row-meta {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .row-meta b { color: var(--ink); font-weight: 600; }
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+  }
+  mark {
+    background: #fef08a;
+    color: inherit;
+    border-radius: 3px;
+    padding: 0 1px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔎 Pencarian Dampingan 2026</h1>
+  <div class="subtitle">Cari siapa Duta yang mendampingi kampung/sekolah tertentu, atau kampung/sekolah apa saja yang didampingi seorang Duta.</div>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Ketik nama Duta, kampung, sekolah, kelurahan, atau kemantren...">
+    <button class="clear-btn" id="clearBtn">✕</button>
+  </div>
+  <div class="hint">Contoh: "Eti Pujiastuti" untuk lihat semua dampingannya, atau "Sosromenduran" untuk cari siapa Duta-nya.</div>
+
+  <div class="filter-row">
+    <button class="filter-chip active" data-filter="semua">Semua</button>
+    <button class="filter-chip" data-filter="Kampung">🏘️ Kampung</button>
+    <button class="filter-chip" data-filter="Sekolah">🏫 Sekolah</button>
+  </div>
+
+  <div class="count-row" id="countRow"></div>
+  <div id="results"></div>
+</div>
+
+<script>
+const DATA = [{"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Gemblakan Atas", "kelurahan": "Suryatmajan", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Ledok Tukangan", "kelurahan": "Tegalpanggung", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Tukangan", "kelurahan": "Tegalpanggung", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Tegal Lempuyangan", "kelurahan": "Bausasran", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Lempuyangan", "kelurahan": "Bausasran", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Gemblakan Bawah", "kelurahan": "Suryatmajan", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Suryatmajan", "kelurahan": "Suryatmajan", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Bausasran", "kelurahan": "Bausasran", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Macanan", "kelurahan": "Bausasran", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "Sosrokusuman", "kelurahan": "Suryatmajan", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Gedongan", "kelurahan": "Purbayan", "kemantren": "Kotagede", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Basen", "kelurahan": "Purbayan", "kemantren": "Kotagede", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Alun-alun", "kelurahan": "Purbayan", "kemantren": "Kotagede", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Purbayan", "kelurahan": "Purbayan", "kemantren": "Kotagede", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Giwangan", "kelurahan": "Giwangan", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Mrican", "kelurahan": "Giwangan", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Malangan", "kelurahan": "Giwangan", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Glagah", "kelurahan": "Warungboto", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Glagah Sari", "kelurahan": "Warungboto", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Ronodigdayan", "kelurahan": "Bausasran", "kemantren": "Danurejan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "Ledok Macanan", "kelurahan": "Suryatmajan", "kemantren": "Danurejan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Patangpuluhan", "kelurahan": "Patangpuluhan", "kemantren": "Wirobrajan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Sindurejan", "kelurahan": "Patangpuluhan", "kemantren": "Wirobrajan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Dipowinatan", "kelurahan": "Keparakan", "kemantren": "Mergangsan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Keparakan Kidul", "kelurahan": "Keparakan", "kemantren": "Mergangsan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Gowongan", "kelurahan": "Gowongan", "kemantren": "Jetis", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Penumping", "kelurahan": "Gowongan", "kemantren": "Jetis", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Pujokusuman", "kelurahan": "Keparakan", "kemantren": "Mergangsan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Jogoyudan", "kelurahan": "Gowongan", "kemantren": "Jetis", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Purbonegaran", "kelurahan": "Terban", "kemantren": "Gondokusuman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "Tegal Kemuniung", "kelurahan": "Tegal panggung", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "Gedongkuning", "kelurahan": "Rejowinangun", "kemantren": "Kotagede", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "Rejowinangun", "kelurahan": "Rejowinangun", "kemantren": "Kotagede", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "Prenggan", "kelurahan": "Prenggan", "kemantren": "Kotagede", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "Pilahan", "kelurahan": "Rejowinangun", "kemantren": "Kotagede", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "Tegalgendu", "kelurahan": "Prenggan", "kemantren": "Kotagede", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "Tinalan", "kelurahan": "Prenggan", "kemantren": "Kotagede", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "Kauman", "kelurahan": "Ngupasan", "kemantren": "Gondomanan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "Langenastran", "kelurahan": "Panembahan", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "Sitisewu", "kelurahan": "Sosromenduran", "kemantren": "Gedongtengen", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Kumendaman", "kelurahan": "Suryodiningratan", "kemantren": "Mantrijeron", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Suryodiningratan", "kelurahan": "Suryodiningratan", "kemantren": "Mantrijeron", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Minggiran", "kelurahan": "Suryodiningratan", "kemantren": "Mantrijeron", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Mangkuyudan", "kelurahan": "Mantrijeron", "kemantren": "Mantrijeron", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Danunegaran", "kelurahan": "Mantrijeron", "kemantren": "Mantrijeron", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Ngadinegaran", "kelurahan": "Mantrijeron", "kemantren": "Mantrijeron", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Mantrijeron", "kelurahan": "Mantrijeron", "kemantren": "Mantrijeron", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Pugeran", "kelurahan": "Suryodiningratan", "kemantren": "Mantrijeron", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Ketandan", "kelurahan": "Ngupasan", "kemantren": "Gondomanan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "Pajeksan", "kelurahan": "Sosromenduran", "kemantren": "Gedongtengen", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "Jatimulyo", "kelurahan": "Kricak", "kemantren": "Tegalrejo", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "Tegalrejo", "kelurahan": "Tegalrejo", "kemantren": "Tegalrejo", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "Sosrowijayan Wetan", "kelurahan": "Sosromenduran", "kemantren": "Gedongtengen", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "Jogonegaran", "kelurahan": "Sosromenduran", "kemantren": "Gedongtengen", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "Kicak Kidul", "kelurahan": "Kricak", "kemantren": "Tegalrejo", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "Gamelan", "kelurahan": "Panembahan", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "Kadipaten Kidul", "kelurahan": "Kadipaten", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "Mangunegaran", "kelurahan": "Panembahan", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "Bangunrejo", "kelurahan": "Kricak", "kemantren": "Tegalrejo", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "Kuncen", "kelurahan": "Pakuncen", "kemantren": "Wirobrajan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "Gampingan", "kelurahan": "Pakuncen", "kemantren": "Wirobrajan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "Wirobrajan", "kelurahan": "Wirobrajan", "kemantren": "Wirobrajan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "Singosaren", "kelurahan": "Pakuncen", "kemantren": "Wirobrajan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "Ketanggungan", "kelurahan": "Wirobrajan", "kemantren": "Wirobrajan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "Tegalmulyo", "kelurahan": "Pakuncen", "kemantren": "Wirobrajan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "Ratmakan", "kelurahan": "Ngupasan", "kemantren": "Gondomanan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "Panembahan", "kelurahan": "Panembahan", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "Ngupasan", "kelurahan": "Ngupasan", "kemantren": "Gondomanan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Ngampilan", "kelurahan": "Ngampilan", "kemantren": "Ngampilan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Ngadiwinatan", "kelurahan": "Ngampilan", "kemantren": "Ngampilan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Serangan", "kelurahan": "Notoprajan", "kemantren": "Ngampilan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Notoprajan", "kelurahan": "Notoprajan", "kemantren": "Ngampilan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Suronatan", "kelurahan": "Notoprajan", "kemantren": "Ngampilan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Pathuk", "kelurahan": "Ngampilan", "kemantren": "Ngampilan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Karangwaru Lor", "kelurahan": "Karangwaru", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Karangwaru Kidul", "kelurahan": "Karangwaru", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Kadipaten Wetan", "kelurahan": "Kadipaten", "kemantren": "Kraton", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "Keparakan Lor", "kelurahan": "Keparakan", "kemantren": "Mergangsan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Yudonegaran", "kelurahan": "Prawirodirjan", "kemantren": "Gondomanan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Sayidan", "kelurahan": "Prawirodirjan", "kemantren": "Gondomanan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Prawirodirjan", "kelurahan": "Prawirodirjan", "kemantren": "Gondomanan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Bener", "kelurahan": "Bener", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Jagalan Ledoksari", "kelurahan": "Purwokinanti", "kemantren": "Pakualaman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Purwodiningratan", "kelurahan": "Ngampilan", "kemantren": "Ngampilan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Petinggen", "kelurahan": "Karangwaru", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Sidomulyo", "kelurahan": "Bener", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Tompeyan", "kelurahan": "Tegalrejo", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "Demakan", "kelurahan": "Tegalrejo", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Purwokinanti", "kelurahan": "Purwokinanti", "kemantren": "Pakualaman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Kepatihan", "kelurahan": "Purwokinanti", "kemantren": "Pakualaman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Gunungketur", "kelurahan": "Gunungketur", "kemantren": "Pakualaman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Margoyasan", "kelurahan": "Gunungketur", "kemantren": "Pakualaman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Jagalan Beji", "kelurahan": "Purwokinanti", "kemantren": "Pakualaman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Kauman", "kelurahan": "Gunungketur", "kemantren": "Pakualaman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Bangirejo", "kelurahan": "Karangwaru", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Blunyahrejo", "kelurahan": "Karangwaru", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Kadipaten Kulon", "kelurahan": "Kadipaten", "kemantren": "Kraton", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "Sudagaran", "kelurahan": "Tegalrejo", "kemantren": "Tegalrejo", "jumlah": 10, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Demangan", "kelurahan": "Demangan", "kemantren": "Gondokusuman", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Pengok", "kelurahan": "Demangan", "kemantren": "Gondokusuman", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Pengok Kidul", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Sapen", "kelurahan": "Demangan", "kemantren": "Gondokusuman", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Cokrodiningratan", "kelurahan": "Cokrodiningratan", "kemantren": "Jetis", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Jetisharjo", "kelurahan": "Cokrodiningratan", "kemantren": "Jetis", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Gendeng", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Baciro", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Resonegaran", "kelurahan": "Terban", "kemantren": "Gondokusuman", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Ari Tri Nugrahanti", "nama": "Prawirotaman", "kelurahan": "Brontokusuman", "kemantren": "Mergangsan", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Suprawoto", "nama": "Tahunan", "kelurahan": "Tahunan", "kemantren": "Umbulharjo", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Suprawoto", "nama": "Celeban", "kelurahan": "Tahunan", "kemantren": "Umbulharjo", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Suprawoto", "nama": "Tempel Wirogunan", "kelurahan": "Tahunan", "kemantren": "Umbulharjo", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Suprawoto", "nama": "Gandekan Lor", "kelurahan": "Pringgokusuman", "kemantren": "Gedongtengen", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Suprawoto", "nama": "Notoyudan", "kelurahan": "Pringgokusuman", "kemantren": "Gedongtengen", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Suprawoto", "nama": "Pringgokusuman", "kelurahan": "Pringgokusuman", "kemantren": "Gedongtengen", "jumlah": 9, "jenis": "Kampung"}, {"khk": null, "duta": "Suprawoto", "nama": "Jlagran", "kelurahan": "Pringgokusuman", "kemantren": "Gedongtengen", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Cokrodirjan", "kelurahan": "Suryatmajan", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Klitren Lor", "kelurahan": "Klitren", "kemantren": "Gondokusuman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Iromejan", "kelurahan": "Klitren", "kemantren": "Gondokusuman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Kepuh Balapan", "kelurahan": "Klitren", "kemantren": "Gondokusuman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Mangkukusuman", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Danukusuman", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Baciro Sanggrahan", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Terban", "kelurahan": "Terban", "kemantren": "Gondokusuman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Sagan", "kelurahan": "Terban", "kemantren": "Gondokusuman", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Marsanti", "nama": "Tegalpanggung", "kelurahan": "Tegal panggung", "kemantren": "Danurejan", "jumlah": 10, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Rifki Zulianto", "nama": "Ngadisuryan", "kelurahan": "Patehan", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Rifki Zulianto", "nama": "Patehan", "kelurahan": "Patehan", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Rifki Zulianto", "nama": "Taman", "kelurahan": "Patehan", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Rifki Zulianto", "nama": "Ngasem", "kelurahan": "Kadipaten", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Rifki Zulianto", "nama": "Juminahan", "kelurahan": "Tegalpanggung", "kemantren": "Danurejan", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Rifki Zulianto", "nama": "Jogokariyan", "kelurahan": "Mantrijeron", "kemantren": "Mantrijeron", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Rifki Zulianto", "nama": "Suryoputran", "kelurahan": "Panembahan", "kemantren": "Kraton", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Rifki Zulianto", "nama": "Sutodirjan", "kelurahan": "Pringgokusuman", "kemantren": "Gedongtengen", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Novi Dian S.", "duta": "Rifki Zulianto", "nama": "Kemetiran Lor", "kelurahan": "Pringgokusuman", "kemantren": "Gedongtengen", "jumlah": 9, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Sanggrahan", "kelurahan": "Semaki", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Semaki Kulon", "kelurahan": "Semaki", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Miliran", "kelurahan": "Mujamuju", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Mujamuju", "kelurahan": "Mujamuju", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Balirejo", "kelurahan": "Mujamuju", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Semaki Gede", "kelurahan": "Semaki", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Mergangsan Kidul", "kelurahan": "Wirogunan", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Joyonegaran", "kelurahan": "Wirogunan", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Nyutran", "kelurahan": "Wirogunan", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Pandeyan", "kelurahan": "Pandeyan", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "Mergangsan Lor", "kelurahan": "Wirogunan", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Kotabaru", "kelurahan": "Kotabaru", "kemantren": "Gondokusuman", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Timuran", "kelurahan": "Brontokusuman", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Karangkajen", "kelurahan": "Brontokusuman", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Lowanu", "kelurahan": "Brontokusuman", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Brontokusuman", "kelurahan": "Brontokusuman", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Cokrokusuman", "kelurahan": "Cokrodiningratan", "kemantren": "Jetis", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Suryowijayan", "kelurahan": "Gedongkiwo", "kemantren": "Mantrijeron", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Gedongkiwo", "kelurahan": "Gedongkiwo", "kemantren": "Mantrijeron", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Karanganyar", "kelurahan": "Brontokusuman", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Wirogunan", "kelurahan": "Wirogunan", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "Sosrodipuran", "kelurahan": "Sosromenduran", "kemantren": "Gedongtengen", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Warungboto", "kelurahan": "Warungboto", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Sorogenen", "kelurahan": "Sorosutan", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Pingit", "kelurahan": "Bumijo", "kemantren": "Jetis", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Badran", "kelurahan": "Bumijo", "kemantren": "Jetis", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Bumijo", "kelurahan": "Bumijo", "kemantren": "Jetis", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Sorosutan", "kelurahan": "Sorosutan", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Bintaran", "kelurahan": "Wirogunan", "kemantren": "Mergangsan", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Gambiran", "kelurahan": "Pandeyan", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Surokarsan", "kelurahan": "Wirogunan", "kemantren": "Umbulharjo", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Dukuh", "kelurahan": "Gedongkiwo", "kemantren": "Mantrijeron", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "Sosromenduran", "kelurahan": "Sosromenduran", "kemantren": "Gedongtengen", "jumlah": 11, "jenis": "Kampung"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "SMA Muhammadiyah 7 Yogyakarta", "kelurahan": "Wirobrajan", "kemantren": "Wirobrajan", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Brian Milano Sabrina", "duta": "Siti Nur Khasanah", "nama": "SD Negri Pujokusuman", "kelurahan": "Keparakan", "kemantren": "Mergangsan", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "SD Muhammadiyah Kleco", "kelurahan": "Prenggan", "kemantren": "Kotagede", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Brian Milano Sabrina", "duta": "Davit Lutviantara", "nama": "SD Muhammadiyah Pakel", "kelurahan": "Sorosutan", "kemantren": "Umbulharjo", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "SD Muhammadiyah Karangkajen", "kelurahan": "Brontokusuman", "kemantren": "Mergangsan", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Brian Milano Sabrina", "duta": "Eti Pujiastuti", "nama": "SD Muhammadiyah Bausasran", "kelurahan": "Bausasran", "kemantren": "Danurejan", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "SD Joannes Bosco", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Yugo Saputro", "duta": "Suprihatin", "nama": "SMP Joannes Bosco", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Yugo Saputro", "duta": "Fica Munawaroh", "nama": "SMA Muhammadiyah 3 Yogyakarta", "kelurahan": "Wirobrajan", "kemantren": "Wirobrajan", "jumlah": 1, "jenis": "Sekolah"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "TK/Day Sang Timur Yogyakarta", "kelurahan": "Pandeyan", "kemantren": "Umbulharjo", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Yugo Saputro", "duta": "Prima Dwi Pradana", "nama": "SD Sang Timur Yogyakarta", "kelurahan": "Pandeyan", "kemantren": "Umbulharjo", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Yugo Saputro", "duta": "Ana Puri", "nama": "SMP Muhammadiyah 3 Yogyakarta", "kelurahan": "Wirobrajan", "kemantren": "Wirobrajan", "jumlah": 1, "jenis": "Sekolah"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "SD Muhammadiyah Purwodiningratan", "kelurahan": "Ngampilan", "kemantren": "Ngampilan", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Sri Windarsih", "duta": "Hartinah", "nama": "SMA Muhammadiyah 5 Yogyakarta", "kelurahan": "Ngampilan", "kemantren": "Ngampilan", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "SMK Muhammadiyah 3 Yogyakarta", "kelurahan": "Giwangan", "kemantren": "Umbulharjo", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Sri Windarsih", "duta": "Indera Dwi Pratiwi", "nama": "TK Negri 3 Yogyakarta", "kelurahan": "Panembahan", "kemantren": "Kraton", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "SD Muhammadiyah Pringgokusuman", "kelurahan": "Pringgokusuman", "kemantren": "Gedongtengen", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Sri Windarsih", "duta": "R. Zaisul Hafid", "nama": "SD Muhammadiyah Karangwaru", "kelurahan": "Karangwaru", "kemantren": "Tegalrejo", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Novi Dian Safitri", "duta": "Ari Tri Nugrahanti", "nama": "SD Muhammadiyah Gendeng", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 1, "jenis": "Sekolah"}, {"khk": "Novi Dian Safitri", "duta": "Suprawoto", "nama": "SMP Muhammadiyah 1 Yogyakarta", "kelurahan": "Ngampilan", "kemantren": "Ngampilan", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Novi Dian Safitri", "duta": "Suprawoto", "nama": "SD Negri 1 Ungaran", "kelurahan": "Kotabaru", "kemantren": "Gondokusuman", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Novi Dian Safitri", "duta": "Marsanti", "nama": "SD Negrri Tegalmulyo", "kelurahan": "Pakuncen", "kemantren": "Wirobrajan", "jumlah": 1, "jenis": "Sekolah"}, {"khk": "Novi Dian Safitri", "duta": "Rifki Zulianto", "nama": "TK ABA Jogokariyan", "kelurahan": "Mantrijeron", "kemantren": "Mantrijeron", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Novi Dian Safitri", "duta": "Rifki Zulianto", "nama": "SD Negri Lempuyangwangi", "kelurahan": "Tegalpanggung", "kemantren": "Danurejan", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "SD Negri Margoyasan", "kelurahan": "Gunungketur", "kemantren": "Pakualaman", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Aprillia Fitri R", "duta": "Sapti Dani Hapsari", "nama": "SMP Negri 5 Yogyakarta", "kelurahan": "Kotabaru", "kemantren": "Gondokusuman", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "TK ABA Purwodiningratan", "kelurahan": "Ngampilan", "kemantren": "Ngampilan", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Aprillia Fitri R", "duta": "Setyaji Wijayanto", "nama": "SD Muhammadiyah Miliran", "kelurahan": "Muja Muju", "kemantren": "Umbulharjo", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "TK Negri Pembina", "kelurahan": "Tahunan", "kemantren": "Umbulharjo", "jumlah": 2, "jenis": "Sekolah"}, {"khk": "Aprillia Fitri R", "duta": "Winda Mahanani", "nama": "TK ABA Al-Iman", "kelurahan": "Baciro", "kemantren": "Gondokusuman", "jumlah": 2, "jenis": "Sekolah"}];
+
+let activeFilter = 'semua';
+const searchInput = document.getElementById('searchInput');
+const clearBtn = document.getElementById('clearBtn');
+const resultsEl = document.getElementById('results');
+const countRow = document.getElementById('countRow');
+const filterChips = document.querySelectorAll('.filter-chip');
+
+filterChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    filterChips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeFilter = chip.dataset.filter;
+    render();
+  });
+});
+
+searchInput.addEventListener('input', () => {
+  clearBtn.style.display = searchInput.value ? 'block' : 'none';
+  render();
+});
+clearBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  clearBtn.style.display = 'none';
+  render();
+  searchInput.focus();
+});
+
+function normalize(s) {
+  return (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function highlight(text, query) {
+  if (!query || !text) return text;
+  const idx = normalize(text).indexOf(normalize(query));
+  if (idx === -1) return text;
+  return text.slice(0, idx) + '<mark>' + text.slice(idx, idx + query.length) + '</mark>' + text.slice(idx + query.length);
+}
+
+function matches(item, q) {
+  if (!q) return true;
+  const nq = normalize(q);
+  return normalize(item.duta).includes(nq) ||
+         normalize(item.nama).includes(nq) ||
+         normalize(item.kelurahan).includes(nq) ||
+         normalize(item.kemantren).includes(nq) ||
+         normalize(item.khk).includes(nq);
+}
+
+function render() {
+  const q = searchInput.value.trim();
+  let list = DATA.filter(item => matches(item, q));
+  if (activeFilter !== 'semua') {
+    list = list.filter(item => item.jenis === activeFilter);
+  }
+
+  if (list.length === 0) {
+    countRow.textContent = '';
+    resultsEl.innerHTML = `<div class="empty-state"><div class="icon">🗂️</div>Tidak ada hasil untuk "${q}".<br>Coba kata kunci lain.</div>`;
+    return;
+  }
+
+  countRow.textContent = q
+    ? `${list.length} hasil ditemukan`
+    : `Menampilkan semua ${list.length} data dampingan`;
+
+  let html = '<div class="list">';
+  list.forEach(item => {
+    const tagClass = item.jenis === 'Kampung' ? 'kampung' : 'sekolah';
+    const tagIcon = item.jenis === 'Kampung' ? '🏘️' : '🏫';
+    html += `
+      <div class="list-row">
+        <div class="row-top">
+          <span class="type-tag ${tagClass}">${tagIcon} ${item.jenis}</span>
+          <span class="row-name">${highlight(item.nama, q)}</span>
+        </div>
+        <div class="row-meta">
+          👤 <b>${highlight(item.duta, q)}</b> &nbsp;·&nbsp; KHK: ${highlight(item.khk || '-', q)} &nbsp;·&nbsp; 📍 ${highlight(item.kelurahan || '-', q)}, ${highlight(item.kemantren || '-', q)}
+        </div>
+      </div>`;
+  });
+  html += '</div>';
+
+  resultsEl.innerHTML = html;
+}
+
+render();
+</script>
+</body>
+</html>
